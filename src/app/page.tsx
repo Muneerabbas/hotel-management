@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight, Check, BedDouble, BarChart3, Shield, Star, Globe, Sparkles } from 'lucide-react';
+import { Logo, LogoMark } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function HomePage() {
@@ -9,12 +10,7 @@ export default function HomePage() {
       {/* Nav */}
       <header className="sticky top-0 z-50 bg-[#F8F6F1]/90 dark:bg-[#141210]/90 backdrop-blur border-b border-[#DDD8CC] dark:border-white/8">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-[#2F4F2F] dark:bg-[#EDE9E0] flex items-center justify-center">
-              <BedDouble className="w-3.5 h-3.5 text-[#F8F6F1] dark:text-[#141210]" />
-            </div>
-            <span className="font-semibold text-[15px] tracking-tight">StayFlow</span>
-          </div>
+          <Logo markSize={28} />
           <nav className="hidden md:flex items-center gap-6 text-sm text-[#7A7060] dark:text-[#9A9080]">
             <a href="#features" className="hover:text-foreground transition-colors">Features</a>
             <a href="#how" className="hover:text-foreground transition-colors">How it works</a>
@@ -38,7 +34,7 @@ export default function HomePage() {
           {/* Tag */}
           <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 border border-[#DDD8CC] dark:border-white/10 bg-white dark:bg-white/5 text-xs text-[#7A7060] dark:text-[#9A9080]">
             <span className="w-1.5 h-1.5 rounded-full bg-[#3A5F3A]" />
-            Built for Kashmir hotel owners · Srinagar, Gulmarg, Pahalgam
+            MehmanManager · Built for Kashmir hotel owners
           </div>
 
           <h1 className="text-5xl md:text-6xl font-bold leading-[1.08] tracking-tight mb-6">
@@ -92,7 +88,7 @@ export default function HomePage() {
                 <div className="w-3 h-3 rounded-full bg-[#DDD8CC]" />
               </div>
               <div className="flex-1 mx-4 h-5 bg-[#EDE9E0] dark:bg-white/5 rounded-sm text-[10px] flex items-center px-2 text-[#7A7060]">
-                stayflow.in/dashboard
+                mehmanmanager.in/dashboard
               </div>
             </div>
 
@@ -364,7 +360,7 @@ export default function HomePage() {
                 {[
                   'Everything in Pro',
                   'Dedicated hotel website',
-                  'yourhotelname.stayflow.in domain',
+                  'yourhotelname.mehmanmanager.in domain',
                   'Photo gallery & amenities page',
                   'Online booking inquiry form',
                   'SEO setup for Google visibility',
@@ -405,14 +401,9 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-[#DDD8CC] dark:border-white/8">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 bg-[#2F4F2F] dark:bg-[#EDE9E0] flex items-center justify-center">
-              <BedDouble className="w-3 h-3 text-[#F8F6F1] dark:text-[#141210]" />
-            </div>
-            <span className="text-sm font-semibold">StayFlow</span>
-          </div>
+          <Logo markSize={24} />
           <p className="text-xs text-[#7A7060] dark:text-[#9A9080] text-center">
-            Made with care for Kashmir hospitality · Dal Lake · Gulmarg · Pahalgam · Sonamarg
+            MehmanManager · Made for Kashmir hospitality · Dal Lake · Gulmarg · Pahalgam · Sonamarg
           </p>
           <div className="flex gap-5 text-xs text-[#7A7060] dark:text-[#9A9080]">
             <Link href="/login" className="hover:text-foreground transition-colors">Sign in</Link>

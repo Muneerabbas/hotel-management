@@ -4,7 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { BedDouble, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,11 +41,8 @@ export default function LoginPage() {
       {/* Left — value prop */}
       <div className="hidden lg:flex w-[420px] shrink-0 bg-[#2F4F2F] dark:bg-[#1A2A1A] flex-col p-12 justify-between">
         <div>
-          <Link href="/" className="inline-flex items-center gap-2 mb-14">
-            <div className="w-7 h-7 bg-white/15 flex items-center justify-center">
-              <BedDouble className="w-3.5 h-3.5 text-white" />
-            </div>
-            <span className="font-semibold text-[15px] tracking-tight text-white">StayFlow</span>
+          <Link href="/" className="inline-block mb-14">
+            <Logo variant="white" markSize={28} />
           </Link>
 
           <h2 className="text-2xl font-bold text-white leading-snug mb-4">
@@ -58,7 +56,7 @@ export default function LoginPage() {
           <div className="grid grid-cols-2 gap-px bg-white/10 border border-white/10">
             {[
               { n: '5 min', l: 'to set up' },
-              { n: '₹0', l: 'forever free' },
+              { n: '₹499', l: 'per month' },
               { n: '100%', l: 'guest records' },
               { n: '1 screen', l: 'entire hotel' },
             ].map(({ n, l }) => (
@@ -82,11 +80,8 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col">
         {/* Mobile header only */}
         <div className="lg:hidden px-8 py-5 border-b border-[#DDD8CC] dark:border-white/8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="w-7 h-7 bg-[#2F4F2F] flex items-center justify-center">
-              <BedDouble className="w-3.5 h-3.5 text-[#F8F6F1]" />
-            </div>
-            <span className="font-semibold text-[15px] tracking-tight">StayFlow</span>
+          <Link href="/" className="inline-block">
+            <Logo markSize={26} />
           </Link>
         </div>
 

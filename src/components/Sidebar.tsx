@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Building2, LayoutDashboard, BedDouble, History, Settings, LogOut, Moon, Sun } from 'lucide-react';
+import { LayoutDashboard, BedDouble, History, Settings, LogOut, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
+import { LogoMark } from '@/components/Logo';
 
 const NAV = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -32,9 +33,12 @@ export function Sidebar({ hotelName, ownerName }: SidebarProps) {
 
       {/* Brand */}
       <div className="h-14 flex items-center px-5 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <Building2 className="w-4 h-4 text-primary-foreground/70" />
-          <span className="text-sm font-semibold text-primary-foreground tracking-wide">StayFlow</span>
+        <div className="flex items-center gap-2.5">
+          <LogoMark size={28} variant="white" />
+          <span className="text-[14px] leading-none tracking-tight text-primary-foreground">
+            <span className="font-bold">Mehman</span>
+            <span className="font-normal opacity-55">Manager</span>
+          </span>
         </div>
       </div>
 

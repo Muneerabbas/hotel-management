@@ -7,8 +7,8 @@ import { Toaster } from '@/components/ui/sonner';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'StayFlow – Hotel Management',
-  description: 'Modern hotel room management platform',
+  title: 'MehmanManager – Hotel Management',
+  description: 'Hotel management built for Kashmir — rooms, guests, and revenue in one screen.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

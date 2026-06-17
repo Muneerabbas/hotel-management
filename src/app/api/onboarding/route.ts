@@ -5,10 +5,10 @@ import Room from '@/models/Room';
 import { getSession } from '@/lib/auth';
 
 interface RoomTypeConfig {
-  name: string;
+  type: string;
+  name?: string;
   count: number;
   price: number;
-  floorPrefix: number;
 }
 
 export async function POST(req: NextRequest) {
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         rooms.push({
           hotelId: session.hotelId,
           roomNumber,
-          roomType: rt.name,
+          roomType: rt.type ?? rt.name,
           price: rt.price,
           status: 'available',
         });

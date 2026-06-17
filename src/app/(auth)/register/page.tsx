@@ -4,13 +4,14 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { BedDouble, Eye, EyeOff, Loader2, Check } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Check } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 
 const PERKS = [
   'Live floor plan — every room at a glance',
   'Guest ID capture at check-in (Aadhaar, PAN, Passport)',
   'Automatic booking history & revenue analytics',
-  'Free forever — no credit card needed',
+  '7-day free trial — no credit card needed',
 ];
 
 export default function RegisterPage() {
@@ -51,11 +52,8 @@ export default function RegisterPage() {
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className="px-8 py-5 border-b border-[#DDD8CC] dark:border-white/8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="w-7 h-7 bg-[#2F4F2F] dark:bg-[#EDE9E0] flex items-center justify-center">
-              <BedDouble className="w-3.5 h-3.5 text-[#F8F6F1] dark:text-[#141210]" />
-            </div>
-            <span className="font-semibold text-[15px] tracking-tight">StayFlow</span>
+          <Link href="/" className="inline-block">
+            <Logo markSize={26} />
           </Link>
         </div>
 
@@ -65,7 +63,7 @@ export default function RegisterPage() {
             <div className="mb-8">
               <h1 className="text-2xl font-bold mb-1.5">Register your hotel</h1>
               <p className="text-sm text-[#7A7060] dark:text-[#9A9080]">
-                Free forever. Setup takes 5 minutes.
+                7-day free trial. Setup takes 5 minutes.
               </p>
             </div>
 
@@ -144,7 +142,7 @@ export default function RegisterPage() {
                 className="w-full h-11 bg-[#2F4F2F] dark:bg-[#EDE9E0] text-[#F8F6F1] dark:text-[#141210] text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
               >
                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                Create free account
+                Start free trial
               </button>
             </form>
 

@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Building2, Loader2, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 
 type Step = 1 | 2;
 
@@ -117,10 +118,7 @@ export default function OnboardingPage() {
       {/* Header */}
       <header className="border-b border-border">
         <div className="max-w-2xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-primary" />
-            <span className="font-semibold text-sm tracking-wide">StayFlow</span>
-          </div>
+          <Logo markSize={24} />
           <div className="flex items-center gap-4">
             <span className="text-xs text-muted-foreground">Step {step} of 2</span>
             <div className="flex gap-1.5">
