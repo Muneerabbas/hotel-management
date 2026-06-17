@@ -1,26 +1,115 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
+@custom-variant dark (&:is(.dark *));
+
+/* Kashmir palette — pine, stone, saffron, snow */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F8F6F1;
+  --foreground: #1C1A16;
+  --card: #FFFFFF;
+  --card-foreground: #1C1A16;
+  --popover: #FFFFFF;
+  --popover-foreground: #1C1A16;
+  --primary: #2F4F2F;          /* deep pine green */
+  --primary-foreground: #F8F6F1;
+  --secondary: #EDE9E0;        /* warm stone */
+  --secondary-foreground: #1C1A16;
+  --muted: #EDE9E0;
+  --muted-foreground: #7A7060;
+  --accent: #EDE9E0;
+  --accent-foreground: #1C1A16;
+  --destructive: #B54A2A;
+  --border: #DDD8CC;
+  --input: #DDD8CC;
+  --ring: #2F4F2F;
+  --radius: 0.5rem;
+
+  /* Status — Kashmir inspired */
+  --available: #3A5F3A;        /* pine */
+  --available-bg: #EFF5EF;
+  --available-border: #C6D9C6;
+  --occupied: #C87941;         /* saffron */
+  --occupied-bg: #FDF3E9;
+  --occupied-border: #EDD3B3;
+  --maintenance: #7A6A55;      /* walnut */
+  --maintenance-bg: #F3EFE9;
+  --maintenance-border: #D4C9BA;
+}
+
+.dark {
+  --background: #141210;
+  --foreground: #EDE9E0;
+  --card: #1E1B17;
+  --card-foreground: #EDE9E0;
+  --popover: #1E1B17;
+  --popover-foreground: #EDE9E0;
+  --primary: #EDE9E0;
+  --primary-foreground: #141210;
+  --secondary: #2A2620;
+  --secondary-foreground: #EDE9E0;
+  --muted: #2A2620;
+  --muted-foreground: #9A9080;
+  --accent: #2A2620;
+  --accent-foreground: #EDE9E0;
+  --destructive: #C86040;
+  --border: rgba(255,255,255,0.08);
+  --input: rgba(255,255,255,0.1);
+  --ring: #7A9A7A;
+
+  --available-bg: #1A2A1A;
+  --available-border: #2A4A2A;
+  --occupied-bg: #2A1E12;
+  --occupied-border: #4A3020;
+  --maintenance-bg: #221E18;
+  --maintenance-border: #3A3028;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 6px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
+  outline-color: var(--ring);
 }
+
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "kern" 1;
 }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Status dot utilities */
+.dot-available { background: var(--available); }
+.dot-occupied  { background: var(--occupied); }
+.dot-maintenance { background: var(--maintenance); }
