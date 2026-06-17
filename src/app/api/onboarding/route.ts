@@ -4,10 +4,9 @@ import Hotel from '@/models/Hotel';
 import Room from '@/models/Room';
 import { getSession } from '@/lib/auth';
 
-interface RoomTypeConfig {
+interface RoomInput {
+  number: string;
   type: string;
-  name?: string;
-  count: number;
   price: number;
 }
 
@@ -17,40 +16,29 @@ export async function POST(req: NextRequest) {
 
   try {
     await connectDB();
-    const body = await req.json();
-    const { roomTypes } = body;
-    const hotel = body.hotel ?? body;
-    const { address, city, district, state, pincode } = hotel;
+    const { rooms }: { rooms: RoomInput[] } = await req.json();
 
-    await Hotel.findByIdAndUpdate(session.hotelId, {
-      address,
-      city,
-      district,
-      state,
-      pincode,
-      onboardingCompleted: true,
-    });
-
-    // Delete existing rooms for this hotel (re-onboarding case)
-    await Room.deleteMany({ hotelId: session.hotelId });
-
-    const rooms = [];
-    for (let i = 0; i < roomTypes.length; i++) {
-      const rt: RoomTypeConfig = roomTypes[i];
-      const floor = i + 1;
-      for (let j = 1; j <= rt.count; j++) {
-        const roomNumber = `${floor}${String(j).padStart(2, '0')}`;
-        rooms.push({
-          hotelId: session.hotelId,
-          roomNumber,
-          roomType: rt.type ?? rt.name,
-          price: rt.price,
-          status: 'available',
-        });
-      }
+    if (!rooms?.length) {
+      return NextResponse.json({ error: 'At least one room is required' }, { status: 400 });
     }
 
-    await Room.insertMany(rooms);
+    const numbers = rooms.map(r => r.number);
+    if (new Set(numbers).size !== numbers.length) {
+      return NextResponse.json({ error: 'Duplicate room numbers found' }, { status: 400 });
+    }
+
+    await Hotel.findByIdAndUpdate(session.hotelId, { onboardingCompleted: true });
+    await Room.deleteMany({ hotelId: session.hotelId });
+
+    await Room.insertMany(
+      rooms.map(r => ({
+        hotelId: session.hotelId,
+        roomNumber: r.number.trim(),
+        roomType: r.type,
+        price: r.price,
+        status: 'available',
+      }))
+    );
 
     return NextResponse.json({ success: true, roomsCreated: rooms.length });
   } catch (err) {

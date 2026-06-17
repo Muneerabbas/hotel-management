@@ -5,7 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 
 export interface JWTPayload {
   hotelId: string;
-  email: string;
+  phone: string;
   hotelName: string;
 }
 

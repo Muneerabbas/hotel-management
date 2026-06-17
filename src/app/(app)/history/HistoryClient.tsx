@@ -85,33 +85,33 @@ export function HistoryClient() {
   const maxRevenue = stats?.recentRevenue.reduce((m, d) => Math.max(m, d.revenue), 0) || 1;
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 sm:p-8 max-w-5xl">
 
       {/* Header */}
-      <div className="mb-10">
+      <div className="mb-6 sm:mb-10">
         <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-2">Analytics</p>
-        <h1 className="text-2xl font-semibold">Booking History</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold">Booking History</h1>
         <p className="text-sm text-muted-foreground mt-1">Guest records, stay history, and revenue</p>
       </div>
 
       {/* Stats strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border border border-border mb-10">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border border border-border mb-6 sm:mb-10">
         {[
           { label: 'Total bookings',  value: stats?.summary.totalBookings.toLocaleString() ?? '—' },
           { label: 'Active guests',   value: stats?.summary.activeGuests.toLocaleString() ?? '—',  color: 'text-[#C87941]' },
           { label: 'Revenue',         value: stats ? `₹${stats.summary.totalRevenue.toLocaleString()}` : '—', color: 'text-[#3A5F3A] dark:text-[#7AB87A]' },
           { label: 'Avg. stay',       value: stats ? `${stats.summary.avgNights.toFixed(1)} nights` : '—' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="bg-background px-6 py-5">
-            <p className="text-xs text-muted-foreground mb-2">{label}</p>
-            <p className={cn('text-2xl font-semibold', color)}>{value}</p>
+          <div key={label} className="bg-background px-4 sm:px-6 py-4 sm:py-5">
+            <p className="text-xs text-muted-foreground mb-1.5">{label}</p>
+            <p className={cn('text-xl sm:text-2xl font-semibold', color)}>{value}</p>
           </div>
         ))}
       </div>
 
       {/* Charts */}
       {stats && (
-        <div className="grid md:grid-cols-2 gap-px bg-border border border-border mb-10">
+        <div className="grid md:grid-cols-2 gap-px bg-border border border-border mb-6 sm:mb-10">
           {/* 7-day revenue */}
           <div className="bg-background p-6">
             <div className="flex items-center gap-2 mb-5">
@@ -282,8 +282,8 @@ export function HistoryClient() {
         </div>
       ) : (
         <div className="border border-border divide-y divide-border">
-          {/* Table head */}
-          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-2.5 bg-card">
+          {/* Desktop table head — hidden on mobile */}
+          <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-2.5 bg-card">
             {['Guest', 'Room', 'Check-in', 'Check-out', 'Amount'].map(h => (
               <p key={h} className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{h}</p>
             ))}
@@ -291,8 +291,9 @@ export function HistoryClient() {
 
           {bookings.map(b => (
             <div key={b._id}>
+              {/* Desktop row */}
               <button
-                className="w-full grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 text-left hover:bg-card/60 transition-colors"
+                className="hidden md:grid w-full grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 text-left hover:bg-card/60 transition-colors"
                 onClick={() => setExpanded(expanded === b._id ? null : b._id)}
               >
                 <div>
@@ -332,9 +333,33 @@ export function HistoryClient() {
                 </div>
               </button>
 
-              {/* Expanded */}
+              {/* Mobile card */}
+              <button
+                className="md:hidden w-full px-4 py-3.5 text-left hover:bg-card/60 transition-colors"
+                onClick={() => setExpanded(expanded === b._id ? null : b._id)}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{b.guestName}</p>
+                    <p className="text-xs text-muted-foreground">Room {b.roomNumber} · {b.roomType}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    {b.totalAmount != null ? (
+                      <p className="text-sm font-medium">₹{b.totalAmount.toLocaleString()}</p>
+                    ) : (
+                      <span className="flex items-center gap-1 text-xs text-[#C87941] font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C87941] animate-pulse" />
+                        Active
+                      </span>
+                    )}
+                    <p className="text-xs text-muted-foreground">{fmt(b.checkIn)}</p>
+                  </div>
+                </div>
+              </button>
+
+              {/* Expanded details */}
               {expanded === b._id && (
-                <div className="px-5 py-4 bg-card border-t border-border">
+                <div className="px-4 sm:px-5 py-4 bg-card border-t border-border">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {[
                       { label: 'ID Type',    value: (ID_LABELS as Record<string, string>)[b.idType] ?? b.idType },

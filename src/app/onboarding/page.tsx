@@ -3,108 +3,121 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { Logo } from '@/components/Logo';
+import { cn } from '@/lib/utils';
 
-type Step = 1 | 2;
+const ROOM_TYPES = ['Standard', 'Deluxe', 'Suite', 'Executive', 'Family', 'Single', 'Twin', 'Presidential'];
 
-interface RoomType { type: string; count: number; price: number }
-const ROOM_TYPE_OPTIONS = ['Standard', 'Deluxe', 'Suite', 'Executive', 'Family'];
+function uid() { return Math.random().toString(36).slice(2, 9); }
 
-const INDIA_STATES = [
-  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
-  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
-  'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
-  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
-  'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu',
-  'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry',
-];
+interface Room  { id: string; number: string }
+interface Group { id: string; type: string; price: number; rooms: Room[] }
+interface Floor { id: string; floorNum: number; groups: Group[] }
 
-// API returns names like "Jammu & Kashmir" — normalize to match dropdown values
-const STATE_NAME_MAP: Record<string, string> = {
-  'jammu & kashmir': 'Jammu and Kashmir',
-  'andaman & nicobar islands': 'Andaman and Nicobar Islands',
-  'dadra & nagar haveli and daman & diu': 'Dadra and Nagar Haveli and Daman and Diu',
-  'dadra and nagar haveli and daman and diu': 'Dadra and Nagar Haveli and Daman and Diu',
-  'pondicherry': 'Puducherry',
-  'uttaranchal': 'Uttarakhand',
-  'orissa': 'Odisha',
-};
+function genRooms(floorNum: number, startSeq: number, count: number): Room[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: uid(),
+    number: `${floorNum}${String(startSeq + i).padStart(2, '0')}`,
+  }));
+}
 
-function normalizeState(raw: string): string {
-  const key = raw.toLowerCase().trim();
-  return STATE_NAME_MAP[key] ?? INDIA_STATES.find(s => s.toLowerCase() === key) ?? raw;
+function makeFloor(floorNum: number): Floor {
+  return {
+    id: uid(), floorNum,
+    groups: [{ id: uid(), type: 'Standard', price: 2500, rooms: genRooms(floorNum, 1, 10) }],
+  };
 }
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
-  const [pincodeLoading, setPincodeLoading] = useState(false);
+  const [floors, setFloors] = useState<Floor[]>([makeFloor(1)]);
+  const [editing, setEditing] = useState<string | null>(null);
 
-  const [hotel, setHotel] = useState({
-    name: '', city: '', district: '', state: '', address: '', pincode: '', phone: '', description: '',
-  });
-  const [roomTypes, setRoomTypes] = useState<RoomType[]>([
-    { type: 'Standard', count: 10, price: 2500 },
-  ]);
+  const allNumbers = floors.flatMap(f => f.groups.flatMap(g => g.rooms.map(r => r.number.trim())));
+  const duplicates = new Set(allNumbers.filter((n, i) => n && allNumbers.indexOf(n) !== i));
 
-  const setH = (k: string, v: string) => setHotel(h => ({ ...h, [k]: v }));
+  // ── mutators ──────────────────────────────────────────────────────────
 
-  const lookupPincode = async (pin: string) => {
-    if (pin.length !== 6) return;
-    setPincodeLoading(true);
-    try {
-      const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
-      const data = await res.json();
-      if (data[0]?.Status === 'Success' && data[0].PostOffice?.length > 0) {
-        const po = data[0].PostOffice[0];
-        setHotel(h => ({
-          ...h,
-          city: h.city || po.Block || po.Name || '',
-          district: po.District || '',
-          state: normalizeState(po.State || ''),
-        }));
-        toast.success('Address auto-filled from pincode');
-      } else {
-        toast.error('Pincode not found');
-      }
-    } catch {
-      toast.error('Failed to fetch pincode details');
-    } finally {
-      setPincodeLoading(false);
-    }
+  const setFloor = (fid: string, patch: Partial<Floor>) =>
+    setFloors(p => p.map(f => f.id === fid ? { ...f, ...patch } : f));
+
+  const setGroup = (fid: string, gid: string, patch: Partial<Group>) =>
+    setFloors(p => p.map(f => f.id === fid
+      ? { ...f, groups: f.groups.map(g => g.id === gid ? { ...g, ...patch } : g) }
+      : f));
+
+  const setRoomNum = (fid: string, gid: string, rid: string, val: string) =>
+    setFloors(p => p.map(f => f.id === fid ? {
+      ...f,
+      groups: f.groups.map(g => g.id === gid ? {
+        ...g, rooms: g.rooms.map(r => r.id === rid ? { ...r, number: val } : r),
+      } : g),
+    } : f));
+
+  const setCount = (fid: string, gid: string, count: number) => {
+    if (count < 1 || count > 99) return;
+    setFloors(p => p.map(f => {
+      if (f.id !== fid) return f;
+      return {
+        ...f,
+        groups: f.groups.map(g => {
+          if (g.id !== gid) return g;
+          const rooms = [...g.rooms];
+          if (count > rooms.length) {
+            const seq = rooms.length + 1;
+            for (let i = 0; i < count - rooms.length; i++)
+              rooms.push({ id: uid(), number: `${f.floorNum}${String(seq + i).padStart(2, '0')}` });
+          } else {
+            rooms.splice(count);
+          }
+          return { ...g, rooms };
+        }),
+      };
+    }));
   };
 
-  const addType = () => {
-    const unused = ROOM_TYPE_OPTIONS.find(t => !roomTypes.find(r => r.type === t));
-    if (unused) setRoomTypes(r => [...r, { type: unused, count: 5, price: 3500 }]);
+  const addGroup = (fid: string) => {
+    const floor = floors.find(f => f.id === fid)!;
+    const usedTypes = floor.groups.map(g => g.type);
+    const type = ROOM_TYPES.find(t => !usedTypes.includes(t)) ?? 'Standard';
+    const seq = floor.groups.reduce((n, g) => n + g.rooms.length, 0) + 1;
+    setFloor(fid, {
+      groups: [...floor.groups, { id: uid(), type, price: 3500, rooms: genRooms(floor.floorNum, seq, 5) }],
+    });
   };
 
-  const updateType = (i: number, k: keyof RoomType, v: string | number) =>
-    setRoomTypes(r => r.map((rt, idx) => idx === i ? { ...rt, [k]: v } : rt));
+  const removeGroup = (fid: string, gid: string) =>
+    setFloors(p => p.map(f => f.id === fid ? { ...f, groups: f.groups.filter(g => g.id !== gid) } : f));
 
-  const removeType = (i: number) =>
-    setRoomTypes(r => r.filter((_, idx) => idx !== i));
+  const addFloor = () => {
+    const next = Math.max(...floors.map(f => f.floorNum)) + 1;
+    setFloors(p => [...p, makeFloor(next)]);
+  };
 
-  const step1Valid = hotel.name && hotel.city && hotel.phone;
+  const removeFloor = (fid: string) => setFloors(p => p.filter(f => f.id !== fid));
+
+  // ── submit ────────────────────────────────────────────────────────────
 
   const submit = async () => {
-    if (roomTypes.length === 0) { toast.error('Add at least one room type'); return; }
-    if (roomTypes.some(r => r.count < 1 || r.price < 1)) {
-      toast.error('All room types need valid count and price'); return;
-    }
+    const rooms = floors.flatMap(f => f.groups.flatMap(g => g.rooms.map(r => ({
+      number: r.number.trim(), type: g.type, price: g.price,
+    }))));
+    if (!rooms.length) { toast.error('Add at least one room'); return; }
+    if (rooms.some(r => !r.number)) { toast.error('All room numbers must be filled'); return; }
+    if (duplicates.size > 0) { toast.error(`Duplicate room numbers: ${[...duplicates].join(', ')}`); return; }
+
     setLoading(true);
     try {
       const res = await fetch('/api/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hotel, roomTypes }),
+        body: JSON.stringify({ rooms }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      toast.success('Setup complete');
+      toast.success(`Setup complete · ${rooms.length} rooms created`);
       router.push('/dashboard');
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Setup failed');
@@ -113,245 +126,192 @@ export default function OnboardingPage() {
     }
   };
 
+  const totalRooms = floors.reduce((n, f) => n + f.groups.reduce((m, g) => m + g.rooms.length, 0), 0);
+
+  // ── render ────────────────────────────────────────────────────────────
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border">
-        <div className="max-w-2xl mx-auto px-6 h-14 flex items-center justify-between">
+      <header className="border-b border-border sticky top-0 bg-background z-10">
+        <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
           <Logo markSize={24} />
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-muted-foreground">Step {step} of 2</span>
-            <div className="flex gap-1.5">
-              {([1, 2] as const).map(n => (
-                <div key={n} className={`h-1 w-6 rounded-full transition-colors ${n <= step ? 'bg-primary' : 'bg-border'}`} />
-              ))}
-            </div>
-          </div>
+          <span className="text-xs text-muted-foreground">{totalRooms} room{totalRooms !== 1 ? 's' : ''} configured</span>
         </div>
       </header>
 
-      <div className="flex-1 max-w-2xl mx-auto w-full px-6 py-14">
+      <div className="flex-1 max-w-3xl mx-auto w-full px-6 py-10">
+        <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-2">Room setup</p>
+        <h1 className="text-2xl font-semibold mb-1">Set up your rooms</h1>
+        <p className="text-sm text-muted-foreground mb-8">
+          Add floors and room groups. You can mix room types on the same floor and edit any room number.
+        </p>
 
-        {/* Step 1 — Hotel details */}
-        {step === 1 && (
-          <div>
-            <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-6">Hotel details</p>
-            <h1 className="text-2xl font-semibold mb-8">Tell us about your property</h1>
-
-            <div className="space-y-5">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground/80">Hotel name</label>
-                <input
-                  value={hotel.name}
-                  onChange={e => setH('name', e.target.value)}
-                  placeholder="Houseboat Heritage Srinagar"
-                  className="w-full h-10 px-3 text-sm bg-card border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
-                />
-              </div>
-
-              {/* Pincode with auto-lookup */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground/80">Pincode</label>
-                <div className="relative">
-                  <input
-                    value={hotel.pincode}
-                    onChange={e => {
-                      const val = e.target.value.replace(/\D/g, '').slice(0, 6);
-                      setH('pincode', val);
-                      if (val.length === 6) lookupPincode(val);
-                    }}
-                    placeholder="190001"
-                    maxLength={6}
-                    disabled={pincodeLoading}
-                    className="w-full h-10 px-3 pr-9 text-sm bg-card border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 disabled:opacity-60"
-                  />
-                  {pincodeLoading && (
-                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-primary" />
-                  )}
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  {pincodeLoading
-                    ? <span className="flex items-center gap-1.5 text-primary"><Loader2 className="w-3 h-3 animate-spin" />Fetching address details…</span>
-                    : 'Enter 6-digit pincode to auto-fill city, district and state'}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground/80">City</label>
-                  <input
-                    value={hotel.city}
-                    onChange={e => setH('city', e.target.value)}
-                    placeholder="Srinagar"
-                    className="w-full h-10 px-3 text-sm bg-card border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground/80">District</label>
-                  <input
-                    value={hotel.district}
-                    onChange={e => setH('district', e.target.value)}
-                    placeholder="Srinagar"
-                    className="w-full h-10 px-3 text-sm bg-card border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground/80">State</label>
-                <select
-                  value={hotel.state}
-                  onChange={e => setH('state', e.target.value)}
-                  className="w-full h-10 px-3 text-sm bg-card border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring text-foreground"
-                >
-                  <option value="">Select state</option>
-                  {INDIA_STATES.map(s => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground/80">Address</label>
-                <input
-                  value={hotel.address}
-                  onChange={e => setH('address', e.target.value)}
-                  placeholder="Near Dal Lake, Boulevard Road"
-                  className="w-full h-10 px-3 text-sm bg-card border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground/80">Phone</label>
-                <input
-                  type="tel"
-                  value={hotel.phone}
-                  onChange={e => setH('phone', e.target.value)}
-                  placeholder="+91 94190 00000"
-                  className="w-full h-10 px-3 text-sm bg-card border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground/80">
-                  Description <span className="text-muted-foreground font-normal">(optional)</span>
-                </label>
-                <textarea
-                  value={hotel.description}
-                  onChange={e => setH('description', e.target.value)}
-                  placeholder="A brief note about your property..."
-                  rows={3}
-                  className="w-full px-3 py-2.5 text-sm bg-card border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none"
-                />
-              </div>
-
-              <div className="pt-2">
-                <button
-                  onClick={() => {
-                    if (step1Valid) setStep(2);
-                    else toast.error('Please fill hotel name, city and phone');
-                  }}
-                  className="px-6 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded hover:opacity-90 transition-opacity"
-                >
-                  Continue to room setup
-                </button>
-              </div>
-            </div>
+        {duplicates.size > 0 && (
+          <div className="mb-6 flex items-center gap-2 px-4 py-3 bg-destructive/8 border border-destructive/20 text-sm text-destructive">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            Duplicate room numbers: <span className="font-mono font-medium">{[...duplicates].join(', ')}</span>
           </div>
         )}
 
-        {/* Step 2 — Room configuration */}
-        {step === 2 && (
-          <div>
-            <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-6">Room configuration</p>
-            <h1 className="text-2xl font-semibold mb-2">Set up your room types</h1>
-            <p className="text-sm text-muted-foreground mb-8">
-              Each type gets its own floor. Room numbers are auto-generated (e.g. Standard → 101, 102…)
-            </p>
+        <div className="space-y-6">
+          {floors.map((floor, fi) => (
+            <div key={floor.id} className="border border-border">
+              {/* Floor header */}
+              <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Floor</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={floor.floorNum}
+                    onChange={e => setFloor(floor.id, { floorNum: Number(e.target.value) })}
+                    className="w-14 h-7 px-2 text-sm font-medium bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring text-center"
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {floor.groups.reduce((n, g) => n + g.rooms.length, 0)} rooms
+                  </span>
+                </div>
+                {floors.length > 1 && (
+                  <button onClick={() => removeFloor(floor.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
 
-            <div className="space-y-3 mb-6">
-              {roomTypes.map((rt, i) => (
-                <div key={i} className="border border-border p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Floor {i + 1}</p>
-                    {roomTypes.length > 1 && (
-                      <button onClick={() => removeType(i)} className="text-muted-foreground hover:text-foreground transition-colors">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="text-xs text-muted-foreground">Type</label>
+              {/* Groups */}
+              <div className="divide-y divide-border">
+                {floor.groups.map((group, gi) => (
+                  <div key={group.id} className="p-4 space-y-3">
+                    {/* Group controls */}
+                    <div className="flex flex-wrap items-center gap-3">
                       <select
-                        value={rt.type}
-                        onChange={e => updateType(i, 'type', e.target.value)}
-                        className="w-full h-9 px-2.5 text-sm bg-card border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring"
+                        value={group.type}
+                        onChange={e => setGroup(floor.id, group.id, { type: e.target.value })}
+                        className="h-8 px-2.5 text-xs font-medium bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring"
                       >
-                        {ROOM_TYPE_OPTIONS.map(t => (
-                          <option key={t} value={t} disabled={roomTypes.some((r, ri) => ri !== i && r.type === t)}>
+                        {ROOM_TYPES.map(t => (
+                          <option key={t} value={t}
+                            disabled={t !== group.type && floor.groups.some(g => g.id !== group.id && g.type === t)}>
                             {t}
                           </option>
                         ))}
                       </select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs text-muted-foreground">Rooms</label>
-                      <input
-                        type="number"
-                        min={1}
-                        value={rt.count}
-                        onChange={e => updateType(i, 'count', Number(e.target.value))}
-                        className="w-full h-9 px-2.5 text-sm bg-card border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs text-muted-foreground">Price / night (₹)</label>
-                      <input
-                        type="number"
-                        min={1}
-                        value={rt.price}
-                        onChange={e => updateType(i, 'price', Number(e.target.value))}
-                        className="w-full h-9 px-2.5 text-sm bg-card border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring"
-                      />
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Preview: {Array.from({ length: Math.min(rt.count, 5) }, (_, j) => `${i + 1}0${j + 1}`).join(', ')}
-                    {rt.count > 5 ? `… ${rt.count} total` : ''}
-                  </p>
-                </div>
-              ))}
 
-              {roomTypes.length < ROOM_TYPE_OPTIONS.length && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground">Rooms</span>
+                        <button
+                          onClick={() => setCount(floor.id, group.id, group.rooms.length - 1)}
+                          className="w-6 h-6 flex items-center justify-center border border-border rounded text-sm hover:bg-muted transition-colors"
+                        >−</button>
+                        <span className="w-7 text-center text-sm font-medium">{group.rooms.length}</span>
+                        <button
+                          onClick={() => setCount(floor.id, group.id, group.rooms.length + 1)}
+                          className="w-6 h-6 flex items-center justify-center border border-border rounded text-sm hover:bg-muted transition-colors"
+                        >+</button>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground">₹</span>
+                        <input
+                          type="number"
+                          min={1}
+                          value={group.price}
+                          onChange={e => setGroup(floor.id, group.id, { price: Number(e.target.value) })}
+                          className="w-24 h-8 px-2.5 text-xs bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-ring"
+                          placeholder="Price/night"
+                        />
+                        <span className="text-xs text-muted-foreground">/night</span>
+                      </div>
+
+                      {floor.groups.length > 1 && (
+                        <button
+                          onClick={() => removeGroup(floor.id, group.id)}
+                          className="ml-auto text-muted-foreground hover:text-destructive transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Room number chips */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {group.rooms.map(room => {
+                        const isDup = duplicates.has(room.number.trim());
+                        const isEdit = editing === room.id;
+                        return isEdit ? (
+                          <input
+                            key={room.id}
+                            autoFocus
+                            value={room.number}
+                            onChange={e => setRoomNum(floor.id, group.id, room.id, e.target.value)}
+                            onBlur={() => setEditing(null)}
+                            onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setEditing(null); }}
+                            className={cn(
+                              'w-16 h-8 px-2 text-xs text-center font-mono border rounded focus:outline-none focus:ring-1 focus:ring-ring bg-background',
+                              isDup ? 'border-destructive text-destructive' : 'border-primary'
+                            )}
+                          />
+                        ) : (
+                          <button
+                            key={room.id}
+                            onClick={() => setEditing(room.id)}
+                            title="Click to edit room number"
+                            className={cn(
+                              'h-8 px-2.5 text-xs font-mono border rounded transition-colors hover:border-foreground/40',
+                              isDup
+                                ? 'border-destructive/50 bg-destructive/8 text-destructive'
+                                : 'border-border bg-card text-foreground'
+                            )}
+                          >
+                            {room.number || '—'}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {gi === 0 && (
+                      <p className="text-[11px] text-muted-foreground">Click any room number to edit it</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Add group */}
+              <div className="px-4 py-3 border-t border-border">
                 <button
-                  onClick={addType}
-                  className="w-full h-10 border border-dashed border-border text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors flex items-center justify-center gap-2"
+                  onClick={() => addGroup(floor.id)}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  Add room type
+                  Add room type to this floor
                 </button>
-              )}
+              </div>
             </div>
+          ))}
 
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setStep(1)}
-                className="px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Back
-              </button>
-              <button
-                onClick={submit}
-                disabled={loading}
-                className="px-6 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
-              >
-                {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Complete setup
-              </button>
-            </div>
-          </div>
-        )}
+          {/* Add floor */}
+          <button
+            onClick={addFloor}
+            className="w-full h-11 border border-dashed border-border text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors flex items-center justify-center gap-2"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add floor
+          </button>
+        </div>
+
+        {/* Submit */}
+        <div className="mt-8 flex items-center gap-4">
+          <button
+            onClick={submit}
+            disabled={loading || duplicates.size > 0}
+            className="px-6 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+          >
+            {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            Complete setup · {totalRooms} rooms
+          </button>
+          {duplicates.size > 0 && (
+            <span className="text-xs text-destructive">Fix duplicate room numbers first</span>
+          )}
+        </div>
       </div>
     </div>
   );

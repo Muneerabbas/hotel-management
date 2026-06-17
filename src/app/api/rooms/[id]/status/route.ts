@@ -13,7 +13,7 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await req.json();
-  const { status, guestName, idType, idNumber } = body;
+  const { status, guestName, idType, idNumber, checkIn, checkOut } = body;
 
   if (!['available', 'occupied', 'maintenance'].includes(status)) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
@@ -26,7 +26,6 @@ export async function PATCH(
 
   const previousStatus = room.status;
 
-  // Check-in: create a booking record
   if (status === 'occupied' && previousStatus !== 'occupied') {
     if (!guestName || !idType || !idNumber) {
       return NextResponse.json(
@@ -34,6 +33,7 @@ export async function PATCH(
         { status: 400 }
       );
     }
+    const checkInDate = checkIn ? new Date(checkIn) : new Date();
     await Booking.create({
       hotelId:    session.hotelId,
       roomId:     room._id,
@@ -43,27 +43,20 @@ export async function PATCH(
       guestName,
       idType,
       idNumber,
-      checkIn:    new Date(),
+      checkIn:    checkInDate,
+      checkOut:   checkOut ? new Date(checkOut) : null,
       status:     'active',
     });
   }
 
-  // Check-out: close the active booking
   if (status !== 'occupied' && previousStatus === 'occupied') {
-    const activeBooking = await Booking.findOne({
-      roomId: room._id,
-      status: 'active',
-    }).sort({ checkIn: -1 });
-
+    const activeBooking = await Booking.findOne({ roomId: room._id, status: 'active' }).sort({ checkIn: -1 });
     if (activeBooking) {
-      const checkOut = new Date();
+      const checkOutDate = new Date();
       const msPerDay = 1000 * 60 * 60 * 24;
-      const nights = Math.max(
-        1,
-        Math.round((checkOut.getTime() - activeBooking.checkIn.getTime()) / msPerDay)
-      );
+      const nights = Math.max(1, Math.round((checkOutDate.getTime() - activeBooking.checkIn.getTime()) / msPerDay));
       await Booking.findByIdAndUpdate(activeBooking._id, {
-        checkOut,
+        checkOut: checkOutDate,
         nights,
         totalAmount: nights * room.price,
         status: 'completed',

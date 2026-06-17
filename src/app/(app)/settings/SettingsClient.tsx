@@ -39,13 +39,13 @@ export function SettingsClient({ hotel }: { hotel: Hotel }) {
   const labelClass = 'block text-xs text-muted-foreground mb-1.5';
 
   return (
-    <div className="p-8 max-w-xl">
+    <div className="p-4 sm:p-8 max-w-xl">
 
       {/* Header */}
-      <div className="mb-10">
+      <div className="mb-6 sm:mb-10">
         <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-2">Account</p>
-        <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">{hotel.email}</p>
+        <h1 className="text-xl sm:text-2xl font-semibold">Settings</h1>
+        <p className="text-sm text-muted-foreground mt-1">{hotel.phone}</p>
       </div>
 
       <form onSubmit={save} className="space-y-8">
@@ -70,7 +70,7 @@ export function SettingsClient({ hotel }: { hotel: Hotel }) {
         {/* Owner */}
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-4">Owner details</p>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Full name</label>
               <input value={form.ownerName} onChange={e => set('ownerName', e.target.value)} className={inputClass} />
@@ -92,7 +92,7 @@ export function SettingsClient({ hotel }: { hotel: Hotel }) {
               <label className={labelClass}>Address</label>
               <input value={form.address} onChange={e => set('address', e.target.value)} placeholder="Near Dal Lake, Boulevard Road" className={inputClass} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>City</label>
                 <input value={form.city} onChange={e => set('city', e.target.value)} placeholder="Srinagar" className={inputClass} />
@@ -107,12 +107,12 @@ export function SettingsClient({ hotel }: { hotel: Hotel }) {
 
         <div className="h-px bg-border" />
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-xs text-muted-foreground">Changes are saved immediately</p>
           <button
             type="submit"
             disabled={loading}
-            className="px-5 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+            className="w-full sm:w-auto px-5 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             Save changes

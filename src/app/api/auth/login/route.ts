@@ -7,13 +7,13 @@ import { cookies } from 'next/headers';
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
-    const { email, password } = await req.json();
+    const { phone, password } = await req.json();
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    if (!phone || !password) {
+      return NextResponse.json({ error: 'Phone number and password are required' }, { status: 400 });
     }
 
-    const hotel = await Hotel.findOne({ email });
+    const hotel = await Hotel.findOne({ phone });
     if (!hotel) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    const token = signToken({ hotelId: hotel._id.toString(), email: hotel.email, hotelName: hotel.name });
+    const token = signToken({ hotelId: hotel._id.toString(), phone: hotel.phone, hotelName: hotel.name });
 
     const cookieStore = await cookies();
     cookieStore.set('stayflow_token', token, {

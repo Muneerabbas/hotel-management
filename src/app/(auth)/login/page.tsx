@@ -11,7 +11,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ phone: '', password: '' });
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,117 +36,69 @@ export default function LoginPage() {
   const labelClass = 'block text-xs font-medium text-[#1C1A16] dark:text-[#EDE9E0] mb-1.5';
 
   return (
-    <div className="min-h-screen bg-[#F8F6F1] dark:bg-[#141210] flex">
+    <div className="min-h-screen bg-[#F8F6F1] dark:bg-[#141210] flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
 
-      {/* Left — value prop */}
-      <div className="hidden lg:flex w-[420px] shrink-0 bg-[#2F4F2F] dark:bg-[#1A2A1A] flex-col p-12 justify-between">
-        <div>
-          <Link href="/" className="inline-block mb-14">
-            <Logo variant="white" markSize={28} />
+        <div className="mb-8">
+          <Link href="/" className="inline-block mb-8">
+            <Logo markSize={28} />
           </Link>
-
-          <h2 className="text-2xl font-bold text-white leading-snug mb-4">
-            Your hotel,<br />always in view.
-          </h2>
-          <p className="text-sm text-white/50 leading-relaxed mb-10">
-            Real-time room status, guest records, and revenue analytics — all from one screen.
+          <h1 className="text-2xl font-bold mb-1.5">Welcome back</h1>
+          <p className="text-sm text-[#7A7060] dark:text-[#9A9080]">
+            Sign in to your hotel dashboard
           </p>
+        </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-px bg-white/10 border border-white/10">
-            {[
-              { n: '5 min', l: 'to set up' },
-              { n: '₹499', l: 'per month' },
-              { n: '100%', l: 'guest records' },
-              { n: '1 screen', l: 'entire hotel' },
-            ].map(({ n, l }) => (
-              <div key={l} className="bg-[#2F4F2F] dark:bg-[#1A2A1A] px-5 py-4">
-                <p className="text-lg font-bold text-white">{n}</p>
-                <p className="text-xs text-white/40 mt-0.5">{l}</p>
-              </div>
-            ))}
+        <form onSubmit={submit} className="space-y-4">
+          <div>
+            <label className={labelClass}>Phone number</label>
+            <input
+              type="tel"
+              placeholder="+91 94190 00000"
+              value={form.phone}
+              onChange={e => setForm({ ...form, phone: e.target.value })}
+              required
+              className={inputClass}
+            />
           </div>
-        </div>
 
-        <div className="border-t border-white/10 pt-6">
-          <p className="text-xs text-white/40 italic leading-relaxed">
-            &ldquo;Ab ek screen pe sab dikh jaata hai — kaun sa kamra khali hai, kaun guest hai.&rdquo;
-          </p>
-          <p className="text-xs text-white/25 mt-2">Dal Lake, Srinagar</p>
-        </div>
-      </div>
-
-      {/* Right — form */}
-      <div className="flex-1 flex flex-col">
-        {/* Mobile header only */}
-        <div className="lg:hidden px-8 py-5 border-b border-[#DDD8CC] dark:border-white/8">
-          <Link href="/" className="inline-block">
-            <Logo markSize={26} />
-          </Link>
-        </div>
-
-        <div className="flex-1 flex items-center justify-center px-8 py-12">
-          <div className="w-full max-w-sm">
-
-            <div className="mb-8">
-              <h1 className="text-2xl font-bold mb-1.5">Welcome back</h1>
-              <p className="text-sm text-[#7A7060] dark:text-[#9A9080]">
-                Sign in to your hotel dashboard
-              </p>
-            </div>
-
-            <form onSubmit={submit} className="space-y-4">
-              <div>
-                <label className={labelClass}>Email address</label>
-                <input
-                  type="email"
-                  placeholder="owner@hotel.com"
-                  value={form.email}
-                  onChange={e => setForm({ ...form, email: e.target.value })}
-                  required
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <label className={labelClass}>Password</label>
-                <div className="relative">
-                  <input
-                    type={showPw ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={form.password}
-                    onChange={e => setForm({ ...form, password: e.target.value })}
-                    required
-                    className={`${inputClass} pr-10`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPw(!showPw)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A7060] hover:text-foreground transition-colors"
-                  >
-                    {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
+          <div>
+            <label className={labelClass}>Password</label>
+            <div className="relative">
+              <input
+                type={showPw ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={form.password}
+                onChange={e => setForm({ ...form, password: e.target.value })}
+                required
+                className={`${inputClass} pr-10`}
+              />
               <button
-                type="submit"
-                disabled={loading}
-                className="w-full h-11 bg-[#2F4F2F] dark:bg-[#EDE9E0] text-[#F8F6F1] dark:text-[#141210] text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+                type="button"
+                onClick={() => setShowPw(!showPw)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A7060] hover:text-foreground transition-colors"
               >
-                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                Sign in
+                {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
-            </form>
-
-            <p className="text-xs text-[#7A7060] dark:text-[#9A9080] mt-6 text-center">
-              Don&apos;t have an account?{' '}
-              <Link href="/register" className="text-[#1C1A16] dark:text-[#EDE9E0] underline underline-offset-2">
-                Register your hotel free
-              </Link>
-            </p>
+            </div>
           </div>
-        </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full h-11 bg-[#2F4F2F] dark:bg-[#EDE9E0] text-[#F8F6F1] dark:text-[#141210] text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+          >
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            Sign in
+          </button>
+        </form>
+
+        <p className="text-xs text-[#7A7060] dark:text-[#9A9080] mt-6 text-center">
+          Don&apos;t have an account?{' '}
+          <Link href="/register" className="text-[#1C1A16] dark:text-[#EDE9E0] underline underline-offset-2">
+            Register your hotel
+          </Link>
+        </p>
       </div>
     </div>
   );

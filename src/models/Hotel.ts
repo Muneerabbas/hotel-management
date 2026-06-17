@@ -6,7 +6,7 @@ export type PlanId = 'trial' | 'pro' | 'pro_website';
 export interface IHotel extends Document {
   name: string;
   ownerName: string;
-  email: string;
+  email?: string;
   password: string;
   phone: string;
   address?: string;
@@ -25,9 +25,9 @@ const HotelSchema = new Schema<IHotel>(
   {
     name: { type: String, required: true },
     ownerName: { type: String, required: true },
-    email: { type: String, required: true, unique: true, lowercase: true },
+    email: { type: String, sparse: true, unique: true, lowercase: true },
     password: { type: String, required: true },
-    phone: { type: String, required: true },
+    phone: { type: String, required: true, unique: true },
     address: { type: String },
     city: { type: String },
     district: { type: String },

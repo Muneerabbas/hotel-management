@@ -45,36 +45,36 @@ export function DashboardClient({ hotel, initialStats, hotelId }: Props) {
   }
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 sm:p-8 max-w-4xl">
 
       {/* Header */}
-      <div className="mb-10">
+      <div className="mb-6 sm:mb-10">
         <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-2">
           {hotel.city || 'Kashmir'} · {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
-        <h1 className="text-2xl font-semibold text-foreground">
+        <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
           {greeting}, {hotel.ownerName.split(' ')[0]}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">{hotel.name}</p>
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border border border-border mb-10">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border border border-border mb-6 sm:mb-10">
         {[
           { label: 'Total rooms',  value: loading ? '—' : stats.total.toString() },
           { label: 'Available',    value: loading ? '—' : stats.available.toString(),   color: 'text-[#3A5F3A] dark:text-[#7AB87A]' },
           { label: 'Occupied',     value: loading ? '—' : stats.occupied.toString(),    color: 'text-[#C87941]' },
           { label: 'Maintenance',  value: loading ? '—' : stats.maintenance.toString(), color: 'text-[#7A6A55] dark:text-[#A0907A]' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="bg-background px-6 py-5">
-            <p className="text-xs text-muted-foreground mb-2">{label}</p>
-            <p className={`text-3xl font-semibold ${color ?? ''}`}>{value}</p>
+          <div key={label} className="bg-background px-4 sm:px-6 py-4 sm:py-5">
+            <p className="text-xs text-muted-foreground mb-1.5 sm:mb-2">{label}</p>
+            <p className={`text-2xl sm:text-3xl font-semibold ${color ?? ''}`}>{value}</p>
           </div>
         ))}
       </div>
 
       {/* Occupancy bar */}
-      <div className="mb-10">
+      <div className="mb-6 sm:mb-10">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
