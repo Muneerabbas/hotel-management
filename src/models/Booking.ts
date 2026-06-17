@@ -19,7 +19,8 @@ export interface IBooking extends Document {
   price:      number;
   guestName:  string;
   idType:     IdType;
-  idNumber:   string;
+  idNumber:   string | null;
+  idImageUrl: string | null;
   checkIn:    Date;
   checkOut:   Date | null;
   nights:     number | null;
@@ -36,7 +37,8 @@ const BookingSchema = new Schema<IBooking>(
     price:       { type: Number, required: true },
     guestName:   { type: String, required: true },
     idType:      { type: String, enum: Object.keys(ID_LABELS), required: true },
-    idNumber:    { type: String, required: true },
+    idNumber:    { type: String, default: null },
+    idImageUrl:  { type: String, default: null },
     checkIn:     { type: Date, required: true },
     checkOut:    { type: Date, default: null },
     nights:      { type: Number, default: null },

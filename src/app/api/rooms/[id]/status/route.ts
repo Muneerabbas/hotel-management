@@ -13,7 +13,7 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await req.json();
-  const { status, guestName, idType, idNumber, checkIn, checkOut } = body;
+  const { status, guestName, idType, idNumber, idImageUrl, checkIn, checkOut } = body;
 
   if (!['available', 'occupied', 'maintenance'].includes(status)) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
@@ -27,9 +27,15 @@ export async function PATCH(
   const previousStatus = room.status;
 
   if (status === 'occupied' && previousStatus !== 'occupied') {
-    if (!guestName || !idType || !idNumber) {
+    if (!guestName || !idType) {
       return NextResponse.json(
-        { error: 'Guest name, ID type and ID number are required for check-in' },
+        { error: 'Guest name and ID type are required for check-in' },
+        { status: 400 }
+      );
+    }
+    if (!idNumber && !idImageUrl) {
+      return NextResponse.json(
+        { error: 'Provide either an ID number or upload an ID card image' },
         { status: 400 }
       );
     }
@@ -42,7 +48,8 @@ export async function PATCH(
       price:      room.price,
       guestName,
       idType,
-      idNumber,
+      idNumber:   idNumber || null,
+      idImageUrl: idImageUrl || null,
       checkIn:    checkInDate,
       checkOut:   checkOut ? new Date(checkOut) : null,
       status:     'active',

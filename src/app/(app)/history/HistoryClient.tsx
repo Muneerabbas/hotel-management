@@ -12,7 +12,8 @@ interface Booking {
   price: number;
   guestName: string;
   idType: string;
-  idNumber: string;
+  idNumber: string | null;
+  idImageUrl: string | null;
   checkIn: string;
   checkOut: string | null;
   nights: number | null;
@@ -121,22 +122,26 @@ export function HistoryClient() {
             {stats.recentRevenue.length === 0 ? (
               <p className="text-sm text-muted-foreground py-8 text-center">No checkout data yet</p>
             ) : (
-              <div className="flex items-end gap-2 h-28">
-                {stats.recentRevenue.map(d => (
-                  <div key={d._id} className="flex-1 flex flex-col items-center gap-1">
-                    <span className="text-[10px] text-muted-foreground">
-                      {d.revenue > 0 ? `₹${(d.revenue / 1000).toFixed(0)}k` : ''}
-                    </span>
-                    <div
-                      className="w-full bg-[#C87941]/70 min-h-[3px] transition-all duration-500"
-                      style={{ height: `${(d.revenue / maxRevenue) * 100}%` }}
-                      title={`₹${d.revenue.toLocaleString()}`}
-                    />
-                    <span className="text-[10px] text-muted-foreground">
-                      {new Date(d._id).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                    </span>
-                  </div>
-                ))}
+              <div className="flex items-end gap-2">
+                {stats.recentRevenue.map(d => {
+                  const BAR_MAX_PX = 96;
+                  const barH = d.revenue > 0 ? Math.max(4, Math.round((d.revenue / maxRevenue) * BAR_MAX_PX)) : 4;
+                  return (
+                    <div key={d._id} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-[10px] text-muted-foreground h-4 flex items-end">
+                        {d.revenue > 0 ? `₹${(d.revenue / 1000).toFixed(0)}k` : ''}
+                      </span>
+                      <div
+                        className="w-full bg-[#C87941]/70 transition-all duration-500"
+                        style={{ height: `${barH}px` }}
+                        title={`₹${d.revenue.toLocaleString()}`}
+                      />
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(d._id).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -145,31 +150,40 @@ export function HistoryClient() {
           <div className="bg-background p-6">
             <div className="flex items-center gap-2 mb-5">
               <BedDouble className="w-3.5 h-3.5 text-muted-foreground" />
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">By room type</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Revenue by room type</p>
             </div>
             {stats.byType.length === 0 ? (
               <p className="text-sm text-muted-foreground py-8 text-center">No completed stays yet</p>
-            ) : (
-              <div className="space-y-4">
-                {stats.byType.map(t => {
-                  const maxCount = Math.max(...stats.byType.map(x => x.count));
-                  return (
-                    <div key={t._id}>
-                      <div className="flex justify-between text-xs mb-1.5">
-                        <span className="font-medium">{t._id}</span>
-                        <span className="text-muted-foreground">{t.count} stays · ₹{t.revenue.toLocaleString()}</span>
+            ) : (() => {
+              const maxRev = Math.max(...stats.byType.map(x => x.revenue));
+              const totalRev = stats.byType.reduce((s, x) => s + x.revenue, 0);
+              return (
+                <div className="space-y-5">
+                  {stats.byType.map(t => {
+                    const pct = Math.round((t.revenue / maxRev) * 100);
+                    const share = Math.round((t.revenue / totalRev) * 100);
+                    return (
+                      <div key={t._id}>
+                        <div className="flex items-baseline justify-between mb-2">
+                          <span className="text-sm font-medium">{t._id}</span>
+                          <span className="text-sm font-semibold">₹{t.revenue.toLocaleString()}</span>
+                        </div>
+                        <div className="h-2 bg-border rounded-full overflow-hidden mb-1.5">
+                          <div
+                            className="h-full bg-primary/70 rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-[11px] text-muted-foreground">
+                          <span>{t.count} stays</span>
+                          <span>{share}% of revenue</span>
+                        </div>
                       </div>
-                      <div className="h-1.5 bg-border rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary/60 rounded-full transition-all duration-500"
-                          style={{ width: `${(t.count / maxCount) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -359,17 +373,17 @@ export function HistoryClient() {
 
               {/* Expanded details */}
               {expanded === b._id && (
-                <div className="px-4 sm:px-5 py-4 bg-card border-t border-border">
+                <div className="px-4 sm:px-5 py-4 bg-card border-t border-border space-y-4">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {[
-                      { label: 'ID Type',    value: (ID_LABELS as Record<string, string>)[b.idType] ?? b.idType },
-                      { label: 'ID Number',  value: b.idNumber, mono: true },
-                      { label: 'Check-in',   value: `${fmt(b.checkIn)} at ${fmtTime(b.checkIn)}` },
-                      { label: 'Check-out',  value: b.checkOut ? `${fmt(b.checkOut)} at ${fmtTime(b.checkOut)}` : 'Still in' },
-                      { label: 'Nights',     value: b.nights != null ? `${b.nights}` : 'In progress' },
-                      { label: 'Total',      value: b.totalAmount != null ? `₹${b.totalAmount.toLocaleString()}` : 'In progress' },
-                      { label: 'Rate',       value: `₹${b.price.toLocaleString()} / night` },
-                      { label: 'Status',     value: b.status === 'active' ? 'Active stay' : 'Completed' },
+                      { label: 'ID Type',   value: (ID_LABELS as Record<string, string>)[b.idType] ?? b.idType },
+                      { label: 'ID Number', value: b.idNumber ?? '—', mono: true },
+                      { label: 'Check-in',  value: `${fmt(b.checkIn)} at ${fmtTime(b.checkIn)}` },
+                      { label: 'Check-out', value: b.checkOut ? `${fmt(b.checkOut)} at ${fmtTime(b.checkOut)}` : 'Still in' },
+                      { label: 'Nights',    value: b.nights != null ? `${b.nights}` : 'In progress' },
+                      { label: 'Total',     value: b.totalAmount != null ? `₹${b.totalAmount.toLocaleString()}` : 'In progress' },
+                      { label: 'Rate',      value: `₹${b.price.toLocaleString()} / night` },
+                      { label: 'Status',    value: b.status === 'active' ? 'Active stay' : 'Completed' },
                     ].map(({ label, value, mono }) => (
                       <div key={label}>
                         <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">{label}</p>
@@ -377,6 +391,15 @@ export function HistoryClient() {
                       </div>
                     ))}
                   </div>
+                  {b.idImageUrl && (
+                    <div>
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-2">ID Card Photo</p>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <a href={b.idImageUrl} target="_blank" rel="noopener noreferrer">
+                        <img src={b.idImageUrl} alt="Guest ID card" className="max-w-xs w-full rounded border border-border object-cover hover:opacity-90 transition-opacity" />
+                      </a>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

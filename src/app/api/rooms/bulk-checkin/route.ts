@@ -8,10 +8,13 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { roomIds, guestName, idType, idNumber, checkIn, checkOut } = await req.json();
+  const { roomIds, guestName, idType, idNumber, idImageUrl, checkIn, checkOut } = await req.json();
 
-  if (!roomIds?.length || !guestName || !idType || !idNumber) {
-    return NextResponse.json({ error: 'Room IDs and guest details are required' }, { status: 400 });
+  if (!roomIds?.length || !guestName || !idType) {
+    return NextResponse.json({ error: 'Room IDs, guest name and ID type are required' }, { status: 400 });
+  }
+  if (!idNumber && !idImageUrl) {
+    return NextResponse.json({ error: 'Provide either an ID number or upload an ID card image' }, { status: 400 });
   }
 
   await connectDB();
@@ -40,7 +43,8 @@ export async function POST(req: NextRequest) {
       price:      r.price,
       guestName,
       idType,
-      idNumber,
+      idNumber:   idNumber || null,
+      idImageUrl: idImageUrl || null,
       checkIn:    checkInDate,
       checkOut:   checkOut ? new Date(checkOut) : null,
       status:     'active',
